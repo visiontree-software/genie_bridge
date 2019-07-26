@@ -5,6 +5,7 @@ from genie_bridge.endpoints import (
     HTTPStatusOk, HTTPStatusClientError, HTTPStatusUnauthenticated
 )
 from genie_bridge.db import get_db
+from datetime import datetime
 
 def register(app):
     @register_endpoint(app, "/patient_data/<since>/<before>", 'usage_patient_data.html')
@@ -20,6 +21,13 @@ def register(app):
         except InvalidToken as ex:
             return err_resp(str(ex), HTTPStatusUnauthenticated)
 
+        # CreationDate is of Date type, so must be converted
+        since_object = datetime.strptime(since, '%Y%m%d%H%M%S')
+        since_formatted = since_object.strftime('%Y/%m/%d %H:%M:%S')
+        
+        before_object = datetime.strptime(before, '%Y%m%d%H%M%S')
+        before_formatted = before_object.strftime('%Y/%m/%d %H:%M:%S')
+
         cursor = db.cursor()
         cols = [
             'id', 'firstname', 'surname', 'dob', 'sex', 'HomePhone', 'EmailAddress',
@@ -29,9 +37,9 @@ def register(app):
         sql = '''
             SELECT {cols}
             FROM Patient
-            WHERE LastUpdated >= '{since}' AND LastUpdated < '{before}'
-            ORDER BY LastUpdated DESC
-        '''.format(cols=', '.join(cols), since=since, before=before)
+            WHERE CreationDate >= '{since}' AND CreationDate < '{before}'
+            ORDER BY CreationDate DESC
+        '''.format(cols=', '.join(cols), since=since_formatted, before=before_formatted)
         cursor.execute(sql)
         result = cursor.fetchall()
 
