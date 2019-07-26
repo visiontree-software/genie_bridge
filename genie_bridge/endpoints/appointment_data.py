@@ -24,13 +24,7 @@ def register(app):
 
         cursor = db.cursor()
 
-        since_object = datetime.strptime(since, '%Y%m%d%H%M%S')
-        since_formatted = since_object.strftime('%Y/%m/%d %H:%M:%S')
-
-        before_object = datetime.strptime(before, '%Y%m%d%H%M%S')
-        before_formatted = before_object.strftime('%Y/%m/%d %H:%M:%S')
-
-        cutoff_object = datetime.strptime(patient_create_cutoff, '%Y%m%d%H%M%S')
+        cutoff_object = datetime.strptime(patient_create_cutoff, '%Y%m%d')
         cutoff_formatted = cutoff_object.strftime('%Y/%m/%d %H:%M:%S')
 
         cols = ['Patient.CreationDate', 'Appt.reason', 'Appt.startdate', 'Appt.starttime', 'Appt.enddate', 'Appt.apptduration', 'Appt.LastUpdated', 'Appt.PT_Id_Fk', 'Appt.ProviderName', 'Appt.ProviderID']
@@ -40,7 +34,7 @@ def register(app):
             INNER JOIN Patient ON Appt.PT_Id_Fk = Patient.Id
             WHERE Patient.CreationDate >= '{cutoff_formatted}'
             AND Appt.LastUpdated >= '{since}' AND Appt.LastUpdated < '{before}'
-        '''.format(cols=', '.join(cols), since=since_formatted, before=before_formatted, cutoff_formatted=cutoff_formatted)
+        '''.format(cols=', '.join(cols), since=since, before=before, cutoff_formatted=cutoff_formatted)
         cursor.execute(sql)
         result = cursor.fetchall()
 
