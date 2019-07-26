@@ -5,6 +5,7 @@ from genie_bridge.endpoints import (
     HTTPStatusOk, HTTPStatusClientError, HTTPStatusUnauthenticated
 )
 from genie_bridge.db import get_db
+from datetime import datetime
 
 def register(app):
     @register_endpoint(app, "/appointment_data/<since>/<before>", 'usage_appointment_data.html')
@@ -14,6 +15,7 @@ def register(app):
             return err_resp('request content is not json or content-type not set to "application/json"', HTTPStatusClientError)
         req_body = req.get_json()
         auth_token = req_body["token"]
+        patient_create_cutoff = req_body["patient_create_cutoff"]
 
         try:
             db = get_db(auth_token)
@@ -22,12 +24,26 @@ def register(app):
 
         cursor = db.cursor()
 
-        cols = ['reason', 'startdate', 'starttime', 'enddate', 'apptduration', 'LastUpdated', 'PT_Id_Fk', 'ProviderName', 'ProviderID']
-        cursor.execute('''SELECT {cols}
-                          FROM Appt WHERE LastUpdated >= '{since}' AND LastUpdated < '{before}'
-                          ORDER BY LastUpdated DESC
-                       '''.format(cols=', '.join(cols), since=since, before=before))
+        since_object = datetime.strptime(since, '%Y%m%d%H%M%S')
+        since_formatted = since_object.strftime('%Y/%m/%d %H:%M:%S')
+
+        before_object = datetime.strptime(before, '%Y%m%d%H%M%S')
+        before_formatted = before_object.strftime('%Y/%m/%d %H:%M:%S')
+
+        cutoff_object = datetime.strptime(patient_create_cutoff, '%Y%m%d%H%M%S')
+        cutoff_formatted = cutoff_object.strftime('%Y/%m/%d %H:%M:%S')
+
+        cols = ['Patient.CreationDate', 'Appt.reason', 'Appt.startdate', 'Appt.starttime', 'Appt.enddate', 'Appt.apptduration', 'Appt.LastUpdated', 'Appt.PT_Id_Fk', 'Appt.ProviderName', 'Appt.ProviderID']
+        sql = '''
+            SELECT {cols}
+            FROM Appt
+            INNER JOIN Patient ON Appt.PT_Id_Fk = Patient.Id
+            WHERE Patient.CreationDate >= '{cutoff_formatted}'
+            AND Appt.LastUpdated >= '{since}' AND Appt.LastUpdated < '{before}'
+        '''.format(cols=', '.join(cols), since=since_formatted, before=before_formatted, cutoff_formatted=cutoff_formatted)
+        cursor.execute(sql)
         result = cursor.fetchall()
+
         data = []
         for r in result:
             dictrow = { cols[i]: r[i] for i in range(len(cols)) }
