@@ -15,20 +15,18 @@ def register(app):
             return err_resp('request content is not json or content-type not set to "application/json"', HTTPStatusClientError)
         req_body = req.get_json()
         auth_token = req_body["token"]
+        patient_create_cutoff = req_body["patient_create_cutoff"]
 
         try:
             db = get_db(auth_token)
         except InvalidToken as ex:
             return err_resp(str(ex), HTTPStatusUnauthenticated)
 
-        # CreationDate is of Date type, so must be converted
-        since_object = datetime.strptime(since, '%Y%m%d%H%M%S')
-        since_formatted = since_object.strftime('%Y/%m/%d %H:%M:%S')
-        
-        before_object = datetime.strptime(before, '%Y%m%d%H%M%S')
-        before_formatted = before_object.strftime('%Y/%m/%d %H:%M:%S')
-
         cursor = db.cursor()
+
+        cutoff_object = datetime.strptime(patient_create_cutoff, '%Y%m%d')
+        cutoff_formatted = cutoff_object.strftime('%Y/%m/%d %H:%M:%S')
+
         cols = [
             'id', 'firstname', 'surname', 'dob', 'sex', 'HomePhone', 'EmailAddress',
             'AddressLine1', 'suburb', 'state', 'postcode', 'accounttype',
@@ -37,9 +35,13 @@ def register(app):
         sql = '''
             SELECT {cols}
             FROM Patient
-            WHERE CreationDate >= '{since}' AND CreationDate < '{before}'
+            WHERE CreationDate >= '{cutoff_formatted}'
+            AND (LastUpdated >= '{since}' AND LastUpdated < '{before}')
             ORDER BY CreationDate DESC
-        '''.format(cols=', '.join(cols), since=since_formatted, before=before_formatted)
+        '''.format(cols=', '.join(cols),
+                since=since,
+                before=before,
+                cutoff_formatted=cutoff_formatted)
         cursor.execute(sql)
         result = cursor.fetchall()
 
