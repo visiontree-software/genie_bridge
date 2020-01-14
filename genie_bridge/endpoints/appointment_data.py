@@ -27,7 +27,30 @@ def register(app):
         cutoff_object = datetime.strptime(patient_create_cutoff, '%Y%m%d')
         cutoff_formatted = cutoff_object.strftime('%Y/%m/%d %H:%M:%S')
 
-        cols = ['Patient.CreationDate', 'Appt.reason', 'Appt.startdate', 'Appt.starttime', 'Appt.enddate', 'Appt.apptduration', 'Appt.LastUpdated', 'Appt.PT_Id_Fk', 'Appt.ProviderName', 'Appt.ProviderID']
+        cols = ['Patient.CreationDate',
+                'Patient.id',
+                'Patient.firstname',
+                'Patient.surname',
+                'Patient.dob',
+                'Patient.sex',
+                'Patient.HomePhone',
+                'Patient.EmailAddress',
+                'Patient.AddressLine1',
+                'Patient.suburb',
+                'Patient.state',
+                'Patient.postcode',
+                'Patient.accounttype',
+                'Patient.HealthFundName',
+                'Patient.LastUpdated',
+                'Appt.reason',
+                'Appt.startdate',
+                'Appt.starttime',
+                'Appt.enddate',
+                'Appt.apptduration',
+                'Appt.LastUpdated',
+                'Appt.PT_Id_Fk',
+                'Appt.ProviderName',
+                'Appt.ProviderID']
         sql = '''
             SELECT {cols}
             FROM Appt
