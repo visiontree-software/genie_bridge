@@ -10,4 +10,4 @@ MarkupSafe==1.0
 # Manually Install: git@github.com:ibrewster/p4d.git
 # p4d dependencies:
 cffi
-setuptools
+setuptools > 24.3

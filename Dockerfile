@@ -13,7 +13,7 @@ RUN mkdir /var/log/genie_bridge
 
 # --- Set up python code
 # Problem w/ pip==9.0.2
-RUN pip3 install pip==9.0.1
+RUN pip3 install pip==19.3.1
 RUN pip3 install gunicorn
 COPY . ${PROJECT_DIR}
 WORKDIR ${PROJECT_DIR}
